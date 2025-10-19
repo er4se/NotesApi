@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: notes_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notesdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  notesapi:
+    image: notesapi_image
+    build:
+      context: ./NotesApi
+    container_name: notes_api
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=notesdb;Username=postgres;Password=postgres"
+    ports:
+      - "5000:8080"
+  
+volumes:
+  pgdata:
