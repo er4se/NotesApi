@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NotesApi.Data;
-using NotesApi.Models;
-using NotesApi.Services;
+using NotesApi.Infrastructure.Data;
+using NotesApi.Domain.Models;
+using NotesApi.Application.Services;
 using Mapster;
-using NotesApi.DTO;
+using NotesApi.Application.DTO;
 using System.Collections.Generic;
 
 namespace NotesApi.Controllers

@@ -1,10 +1,12 @@
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using NotesApi.Controllers;
-using NotesApi.Data;
-using NotesApi.DTO;
-using NotesApi.Models;
-using NotesApi.Services;
+using NotesApi.Infrastructure.Data;
+using NotesApi.Application.DTO;
+using NotesApi.Domain.Models;
+using NotesApi.Application.Services;
+using NotesApi.Application.Repository;
+using NotesApi.Infrastructure.Repository;
 
 namespace NotesApi
 {
@@ -16,6 +18,7 @@ namespace NotesApi
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddScoped<INoteRepository, NoteRepository>();
             builder.Services.AddScoped<INotesService, NotesService>();
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();

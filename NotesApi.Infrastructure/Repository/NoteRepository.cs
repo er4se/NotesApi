@@ -1,12 +1,18 @@
-﻿using NotesApi.Data;
-using NotesApi.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using NotesApi.Application.Repository;
+using NotesApi.Domain.Models;
+using NotesApi.Infrastructure.Data;
 
-namespace NotesApi.Services
+namespace NotesApi.Infrastructure.Repository
 {
-    public class NotesService : INotesService
+    public class NoteRepository : INoteRepository
     {
         private readonly AppDbContext _db;
-        public NotesService(AppDbContext db)
+        public NoteRepository(AppDbContext db)
         {
             _db = db;
         }

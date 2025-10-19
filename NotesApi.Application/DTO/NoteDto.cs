@@ -1,4 +1,4 @@
-﻿namespace NotesApi.DTO
+﻿namespace NotesApi.Application.DTO
 {
     public class NoteDto
     {

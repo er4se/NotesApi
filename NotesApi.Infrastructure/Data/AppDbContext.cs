@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NotesApi.Models;
+using NotesApi.Domain.Models;
 
-namespace NotesApi.Data
+namespace NotesApi.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {

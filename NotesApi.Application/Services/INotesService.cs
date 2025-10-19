@@ -1,6 +1,6 @@
-﻿using NotesApi.Models;
+﻿using NotesApi.Domain.Models;
 
-namespace NotesApi.Services
+namespace NotesApi.Application.Services
 {
     public interface INotesService
     {

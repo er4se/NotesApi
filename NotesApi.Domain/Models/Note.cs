@@ -1,4 +1,4 @@
-﻿namespace NotesApi.Models
+﻿namespace NotesApi.Domain.Models
 {
     public class Note
     {

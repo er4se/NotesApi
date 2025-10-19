@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace NotesApi.DTO
+namespace NotesApi.Application.DTO
 {
-    public class NoteCreateDto
+    public class NoteUpdateDto
     {
         [Required]
         [StringLength(100)]
