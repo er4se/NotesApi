@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using NotesApi.Application.Repository;
 using NotesApi.Domain.Models;
 using NotesApi.Infrastructure.Data;
@@ -21,26 +22,26 @@ namespace NotesApi.Infrastructure.Repository
         /// Получение всех заметок в формате списка
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Note> GetAll() => _db.Notes.ToList();
+        public async Task<IEnumerable<Note>> GetAllAsync(CancellationToken cancellationToken = default) => await _db.Notes.ToListAsync(cancellationToken);
 
         /// <summary>
         /// Получение заметки по её идентификатору
         /// </summary>
         /// <param name="id">Идентификатор заметки (int)</param>
         /// <returns></returns>
-        public Note? GetById(int id) => _db.Notes.Find(id);
+        public async Task<Note?> GetByIdAsync(int id, CancellationToken cancellationToken = default) => await _db.Notes.FindAsync(id, cancellationToken);
 
         /// <summary>
         /// Создание новой заметки
         /// </summary>
         /// <param name="note">Экземпляр создаваемой заметки (Note)</param>
         /// <returns></returns>
-        public Note Create(Note note)
+        public async Task<Note> CreateAsync(Note entity, CancellationToken cancellationToken = default)
         {
-            _db.Notes.Add(note);
-            _db.SaveChanges();
+            await _db.Notes.AddAsync(entity, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
-            return note;
+            return entity;
         }
 
         /// <summary>
@@ -49,15 +50,15 @@ namespace NotesApi.Infrastructure.Repository
         /// <param name="id">Идентификатор заметки (int)</param>
         /// <param name="updatedNote">Экземпляр обновленной заметки (Note)</param>
         /// <returns></returns>
-        public bool Update(int id, Note updatedNote)
+        public async Task<bool> UpdateAsync(int id, Note entity, CancellationToken cancellationToken = default)
         {
-            var existing = _db.Notes.Find(id);
+            var existing = await _db.Notes.FindAsync(id, cancellationToken);
             if (existing == null) return false;
 
-            existing.Title = updatedNote.Title;
-            existing.Content = updatedNote.Content;
+            existing.Title = entity.Title;
+            existing.Content = entity.Content;
 
-            _db.SaveChanges();
+            await _db.SaveChangesAsync(cancellationToken);
 
             return true;
         }
@@ -67,13 +68,13 @@ namespace NotesApi.Infrastructure.Repository
         /// </summary>
         /// <param name="id">Идентификатор заметки (int)</param>
         /// <returns></returns>
-        public bool Delete(int id)
+        public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var existing = _db.Notes.Find(id);
+            var existing = await _db.Notes.FindAsync(id, cancellationToken);
             if (existing == null) return false;
 
             _db.Notes.Remove(existing);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync(cancellationToken);
 
             return true;
         }

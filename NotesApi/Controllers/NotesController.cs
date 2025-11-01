@@ -2,10 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using NotesApi.Infrastructure.Data;
 using NotesApi.Domain.Models;
-using NotesApi.Application.Services;
 using Mapster;
 using NotesApi.Application.DTO;
 using System.Collections.Generic;
+using MediatR;
+using NotesApi.Application.Commands;
 
 namespace NotesApi.Controllers
 {
@@ -13,54 +14,65 @@ namespace NotesApi.Controllers
     [Route("api/[controller]")]
     public class NotesController : ControllerBase
     {
-        private readonly INotesService _service;
+        private readonly IMediator _mediator;
 
-        public NotesController(INotesService service)
+        public NotesController(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<NoteDto>> GetAll() => Ok(_service.GetAll().Adapt<IEnumerable<NoteDto>>());
+        public async Task<ActionResult<IEnumerable<NoteDto>>> GetAllAsync() => Ok(await _mediator.Send(new GetAllNotesQuery()));
 
         [HttpGet("{id}")]
-        public ActionResult<NoteDto> GetById(int id)
+        public async Task<ActionResult<NoteDto>> GetByIdAsync(int id)
         {
-            var result = _service.GetById(id);
+            var result = await _mediator.Send(new GetNoteByIdQuery { Id = id });
             if (result == null) return NotFound();
 
-            return Ok(result.Adapt<NoteDto>());
+            return Ok(result);
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] NoteCreateDto noteDto)
+        public async Task<IActionResult> CreateAsync([FromBody] NoteCreateDto noteDto)
         {
             if(!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var note = noteDto.Adapt<Note>();
-            var created = _service.Create(note);
+            var id = await _mediator.Send(new CreateNoteCommand
+            {
+                Title = noteDto.Title,
+                Content = noteDto.Content,
+            });
 
-            var result = created.Adapt<NoteDto>();
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            var dto = await _mediator.Send(new GetNoteByIdQuery { Id = id });
+            if (dto == null) return NotFound();
+
+            Console.WriteLine($"===DTO Id: {dto.Id}===");
+
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = dto.Id }, dto);
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] NoteUpdateDto noteDto)
+        public async Task<IActionResult> UpdateAsync(int id, [FromBody] NoteUpdateDto noteDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var note = noteDto.Adapt<Note>();
-            var result = _service.Update(id, note);
+            var result = await _mediator.Send(new UpdateNoteCommand
+            {
+                Id = id,
+                Title = noteDto.Title,
+                Content = noteDto.Content
+            });
 
             return result ? NoContent() : NotFound();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> DeleteAsync(int id)
         {
-            var result = _service.Delete(id);
+            var result = await _mediator.Send(new DeleteNoteCommand{ Id = id });
             return result ? NoContent() : NotFound();
         }
     }
