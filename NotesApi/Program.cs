@@ -6,7 +6,7 @@ using NotesApi.Application.DTO;
 using NotesApi.Domain.Models;
 using NotesApi.Application.Repository;
 using NotesApi.Infrastructure.Repository;
-using NotesApi.Application;
+using NotesApi.Application.Common;
 
 namespace NotesApi
 {
@@ -44,7 +44,7 @@ namespace NotesApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddApplication();
-            NotesApi.Application.MappingConfig.RegisterMappings();
+            MappingConfig.RegisterMappings();
             builder.Services.AddScoped<INoteRepository, NoteRepository>();
 
             var app = builder.Build();

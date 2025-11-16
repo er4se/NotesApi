@@ -7,6 +7,11 @@ using NotesApi.Application.DTO;
 using System.Collections.Generic;
 using MediatR;
 using NotesApi.Application.Commands;
+using NotesApi.Application.Commands.CreateNote;
+using NotesApi.Application.Commands.DeleteNote;
+using NotesApi.Application.Commands.UpdateNote;
+using NotesApi.Application.Queries.GetAllNotes;
+using NotesApi.Application.Queries.GetNoteById;
 
 namespace NotesApi.Controllers
 {
@@ -47,8 +52,6 @@ namespace NotesApi.Controllers
 
             var dto = await _mediator.Send(new GetNoteByIdQuery { Id = id });
             if (dto == null) return NotFound();
-
-            Console.WriteLine($"===DTO Id: {dto.Id}===");
 
             return CreatedAtAction(nameof(GetByIdAsync), new { id = dto.Id }, dto);
         }

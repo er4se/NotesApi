@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NotesApi.Application
+namespace NotesApi.Application.Common
 {
     public static class MappingConfig
     {
