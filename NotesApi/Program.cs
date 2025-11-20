@@ -7,6 +7,7 @@ using NotesApi.Domain.Models;
 using NotesApi.Application.Repository;
 using NotesApi.Infrastructure.Repository;
 using NotesApi.Application.Common;
+using NotesApi.Middleware;
 
 namespace NotesApi
 {
@@ -46,8 +47,12 @@ namespace NotesApi
             builder.Services.AddApplication();
             MappingConfig.RegisterMappings();
             builder.Services.AddScoped<INoteRepository, NoteRepository>();
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddProblemDetails();
 
             var app = builder.Build();
+
+            app.UseExceptionHandler();
 
             using (var scope = app.Services.CreateScope())
             {

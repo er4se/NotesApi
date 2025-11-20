@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using NotesApi.Application.Common.Exceptions;
 using NotesApi.Application.Repository;
 
 namespace NotesApi.Application.Commands.DeleteNote
@@ -16,7 +17,7 @@ namespace NotesApi.Application.Commands.DeleteNote
             if (await _repo.DeleteAsync(command.Id, ct))
                 return true;
 
-            return false;
+            throw new NotFoundException($"Note with ID:{command.Id} was not found");
         }
     }
 }

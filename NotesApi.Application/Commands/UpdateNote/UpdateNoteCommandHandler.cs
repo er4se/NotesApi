@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using NotesApi.Application.Common.Exceptions;
 using NotesApi.Application.Repository;
 using NotesApi.Domain.Models;
 
@@ -18,7 +19,7 @@ namespace NotesApi.Application.Commands.UpdateNote
             if (await _repo.UpdateAsync(entity.Id, entity, ct))
                 return true;
 
-            return false;
+            throw new NotFoundException($"Note with ID:{command.Id} was not found");
         }
     }
 }

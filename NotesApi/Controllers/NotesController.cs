@@ -33,17 +33,12 @@ namespace NotesApi.Controllers
         public async Task<ActionResult<NoteDto>> GetByIdAsync(int id)
         {
             var result = await _mediator.Send(new GetNoteByIdQuery { Id = id });
-            if (result == null) return NotFound();
-
             return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateAsync([FromBody] NoteCreateDto noteDto)
         {
-            if(!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var id = await _mediator.Send(new CreateNoteCommand
             {
                 Title = noteDto.Title,
@@ -51,17 +46,12 @@ namespace NotesApi.Controllers
             });
 
             var dto = await _mediator.Send(new GetNoteByIdQuery { Id = id });
-            if (dto == null) return NotFound();
-
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = dto.Id }, dto);
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = dto!.Id }, dto);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAsync(int id, [FromBody] NoteUpdateDto noteDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _mediator.Send(new UpdateNoteCommand
             {
                 Id = id,
@@ -69,14 +59,14 @@ namespace NotesApi.Controllers
                 Content = noteDto.Content
             });
 
-            return result ? NoContent() : NotFound();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(int id)
         {
             var result = await _mediator.Send(new DeleteNoteCommand{ Id = id });
-            return result ? NoContent() : NotFound();
+            return NoContent();
         }
     }
 }
