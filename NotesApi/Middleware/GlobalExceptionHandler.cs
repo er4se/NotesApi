@@ -40,7 +40,7 @@ namespace NotesApi.Middleware
             }
             else
             {
-                _logger.LogError(exception, "Unhandled exception occured");
+                _logger.LogError(exception, "Unhandled exception occurred");
 
                 var (status, title) = MapException(exception);
 

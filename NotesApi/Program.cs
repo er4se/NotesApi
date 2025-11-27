@@ -18,6 +18,7 @@ namespace NotesApi
     {
         public static void Main(string[] args)
         {
+            //config
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .Enrich.WithCorrelationId()
@@ -34,6 +35,7 @@ namespace NotesApi
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Host.UseSerilog();
+            builder.Services.AddTransient<CorrelationIdentifierHandler>();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
@@ -41,10 +43,8 @@ namespace NotesApi
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     npgsqlOptions =>
                     {
-                        // ЯВНО указываем сборку с миграциями
                         npgsqlOptions.MigrationsAssembly("NotesApi.Infrastructure");
 
-                        // Также добавь retry для устойчивости
                         npgsqlOptions.EnableRetryOnFailure(
                             maxRetryCount: 5,
                             maxRetryDelay: TimeSpan.FromSeconds(10),
@@ -70,6 +70,8 @@ namespace NotesApi
 
             var app = builder.Build();
 
+            //pipeline
+            app.UseMiddleware<CorrelationIdentifierHandler>();
             app.UseExceptionHandler();
             app.UseSerilogRequestLogging(options =>
             {
@@ -88,7 +90,6 @@ namespace NotesApi
                     logger.LogInformation($"DbContext assembly: {db.GetType().Assembly.FullName}");
                     logger.LogInformation($"DbContext location: {db.GetType().Assembly.Location}");
 
-                    // Проверка найденных миграций
                     var migrations = db.Database.GetPendingMigrations();
                     logger.LogInformation($"Pending migrations count: {migrations.Count()}");
                     foreach (var migration in migrations)
