@@ -15,10 +15,10 @@ namespace NotesApi.Middleware
             Exception exception,
             CancellationToken cancellationToken)
         {
-            _logger.LogError(exception, "Unhandled exception occured");
-
             if (exception is FluentValidation.ValidationException validationException)
             {
+                _logger.LogWarning(exception, "Validation failed");
+
                 var errors = validationException.Errors.Select(e => new {
                     e.PropertyName,
                     e.ErrorMessage
@@ -40,6 +40,8 @@ namespace NotesApi.Middleware
             }
             else
             {
+                _logger.LogError(exception, "Unhandled exception occured");
+
                 var (status, title) = MapException(exception);
 
                 var problemDetails = new ProblemDetails
