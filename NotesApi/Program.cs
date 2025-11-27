@@ -1,4 +1,6 @@
 using Mapster;
+using Serilog;
+using Serilog.Enrichers.CorrelationId;
 using Microsoft.EntityFrameworkCore;
 using NotesApi.Controllers;
 using NotesApi.Infrastructure.Data;
@@ -8,6 +10,7 @@ using NotesApi.Application.Repository;
 using NotesApi.Infrastructure.Repository;
 using NotesApi.Application.Common;
 using NotesApi.Middleware;
+using System.Globalization;
 
 namespace NotesApi
 {
@@ -15,7 +18,22 @@ namespace NotesApi
     {
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .Enrich.WithCorrelationId()
+                .WriteTo.Console(outputTemplate:
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] ({CorrelationId}) {Message:lj}{NewLine}{Exception}")
+                .WriteTo.File("logs/api-.log",
+                    rollingInterval: RollingInterval.Day,
+                    shared: true,
+                    formatProvider: CultureInfo.InvariantCulture,
+                    fileSizeLimitBytes: 100_000_000,
+                    retainedFileCountLimit: 30)
+                .CreateLogger();
+
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Host.UseSerilog();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
@@ -53,6 +71,10 @@ namespace NotesApi
             var app = builder.Build();
 
             app.UseExceptionHandler();
+            app.UseSerilogRequestLogging(options =>
+            {
+                options.MessageTemplate = "Handled {RequestPath} {RequestMethod} responded {StatusCode} in {Elapsed:0.0000}ms (CorrelationId: {CorrelationId})";
+            });
 
             using (var scope = app.Services.CreateScope())
             {
