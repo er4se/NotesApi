@@ -12,15 +12,15 @@ namespace NotesApi.Application.Commands.UpdateNote
         public UpdateNoteCommandValidator()
         {
             RuleFor(x => x.Id)
-                .GreaterThanOrEqualTo(0).WithMessage("Id cannot be a negative number");
+                .NotEmpty().WithMessage("ID is required");
 
             RuleFor(x => x.Title)
-                .NotEmpty().WithMessage("Title is required")
-                .MaximumLength(100).WithMessage("Title cannot exceed 100 characters");
+                .NotEmpty().WithMessage("TITLE is required")
+                .MaximumLength(100).WithMessage("TITLE cannot exceed 100 characters");
 
             RuleFor(x => x.Content)
-                .NotEmpty().WithMessage("Content is required")
-                .MaximumLength(10000).WithMessage("Content cannot exceed 10k characters");
+                .NotEmpty().WithMessage("CONTENT is required")
+                .MaximumLength(10000).WithMessage("CONTENT cannot exceed 10 000 characters");
         }
     }
 }

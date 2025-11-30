@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace NotesApi.Application.Queries.GetNoteById
 {
-    public class GetNoteByIdQuery : IRequest<NoteDto?>
+    public class GetNoteByIdQuery : IRequest<NoteDto>
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
     }
 }

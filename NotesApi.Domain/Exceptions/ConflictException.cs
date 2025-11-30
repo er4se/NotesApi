@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NotesApi.Application.Common.Exceptions
+namespace NotesApi.Domain.Common.Exceptions
 {
     public class ConflictException : Exception
     {

@@ -1,12 +1,12 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
-using NotesApi.Application.Common.Exceptions;
+using NotesApi.Domain.Common.Exceptions;
 using NotesApi.Application.Repository;
 using NotesApi.Domain.Models;
 
 namespace NotesApi.Application.Commands.UpdateNote
 {
-    public class UpdateNoteCommandHandler : IRequestHandler<UpdateNoteCommand, bool>
+    public class UpdateNoteCommandHandler : IRequestHandler<UpdateNoteCommand, Unit>
     {
         private readonly ILogger<UpdateNoteCommandHandler> _logger;
         private readonly INoteRepository _repo;
@@ -19,16 +19,16 @@ namespace NotesApi.Application.Commands.UpdateNote
             _logger = logger;
         }
 
-        public async Task<bool> Handle(UpdateNoteCommand command, CancellationToken ct = default)
+        public async Task<Unit> Handle(UpdateNoteCommand command, CancellationToken ct = default)
         {
-            var entity = new Note { Id = command.Id, Title = command.Title, Content = command.Content };
-            if (await _repo.UpdateAsync(entity.Id, entity, ct))
-            {
-                _logger.LogInformation($"Updated note {entity.Id}");
-                return true;
-            }
+            var note = await _repo.GetByIdAsync(command.Id, ct)
+                ?? throw new NotFoundException($"NOTE entity with ID: [{command.Id}] was not found");
 
-            throw new NotFoundException($"Note with ID:{command.Id} was not found");
+            note.Update(command.Title, command.Content);
+            await _repo.UpdateAsync(note, ct);
+
+            _logger.LogInformation("NOTE UPDATED, participant entity ID: {0}", note.Id);
+            return Unit.Value;
         }
     }
 }

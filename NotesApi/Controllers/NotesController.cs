@@ -1,12 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NotesApi.Infrastructure.Data;
-using NotesApi.Domain.Models;
-using Mapster;
 using NotesApi.Application.DTO;
-using System.Collections.Generic;
 using MediatR;
-using NotesApi.Application.Commands;
 using NotesApi.Application.Commands.CreateNote;
 using NotesApi.Application.Commands.DeleteNote;
 using NotesApi.Application.Commands.UpdateNote;
@@ -27,32 +21,35 @@ namespace NotesApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<NoteDto>>> GetAllAsync() => Ok(await _mediator.Send(new GetAllNotesQuery()));
+        public async Task<ActionResult<IEnumerable<NoteDto>>> GetAll()
+        {
+            var result = await _mediator.Send(new GetAllNotesQuery());
+            return Ok(result);
+        }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<NoteDto>> GetByIdAsync(int id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<NoteDto>> GetById(Guid id)
         {
             var result = await _mediator.Send(new GetNoteByIdQuery { Id = id });
             return Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] NoteCreateDto noteDto)
+        public async Task<IActionResult> Create([FromBody] NoteCreateDto noteDto)
         {
-            var id = await _mediator.Send(new CreateNoteCommand
+            var dto = await _mediator.Send(new CreateNoteCommand
             {
                 Title = noteDto.Title,
-                Content = noteDto.Content,
+                Content = noteDto.Content
             });
 
-            var dto = await _mediator.Send(new GetNoteByIdQuery { Id = id });
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = dto!.Id }, dto);
+            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] NoteUpdateDto noteDto)
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] NoteUpdateDto noteDto)
         {
-            var result = await _mediator.Send(new UpdateNoteCommand
+            await _mediator.Send(new UpdateNoteCommand
             {
                 Id = id,
                 Title = noteDto.Title,
@@ -62,10 +59,10 @@ namespace NotesApi.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync(int id)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _mediator.Send(new DeleteNoteCommand{ Id = id });
+            await _mediator.Send(new DeleteNoteCommand{ Id = id });
             return NoContent();
         }
     }

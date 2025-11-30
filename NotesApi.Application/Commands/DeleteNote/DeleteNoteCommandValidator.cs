@@ -12,7 +12,7 @@ namespace NotesApi.Application.Commands.DeleteNote
         public DeleteNoteCommandValidator()
         {
             RuleFor(x => x.Id)
-                .GreaterThanOrEqualTo(0).WithMessage("Id cannot be a negative number");
+                .NotEmpty().WithMessage("ID is required");
         }
     }
 }

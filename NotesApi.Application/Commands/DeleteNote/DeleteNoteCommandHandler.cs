@@ -1,12 +1,11 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
-using NotesApi.Application.Commands.CreateNote;
-using NotesApi.Application.Common.Exceptions;
+using NotesApi.Domain.Common.Exceptions;
 using NotesApi.Application.Repository;
 
 namespace NotesApi.Application.Commands.DeleteNote
 {
-    public class DeleteNoteCommandHandler : IRequestHandler<DeleteNoteCommand, bool>
+    public class DeleteNoteCommandHandler : IRequestHandler<DeleteNoteCommand, Unit>
     {
         private readonly ILogger<DeleteNoteCommandHandler> _logger;
         private readonly INoteRepository _repo;
@@ -19,15 +18,15 @@ namespace NotesApi.Application.Commands.DeleteNote
             _logger = logger;
         }
 
-        public async Task<bool> Handle(DeleteNoteCommand command, CancellationToken ct = default)
+        public async Task<Unit> Handle(DeleteNoteCommand command, CancellationToken ct = default)
         {
-            if (await _repo.DeleteAsync(command.Id, ct))
-            {
-                _logger.LogInformation($"Deleted note {command.Id}");
-                return true;
-            }
+            var note = await _repo.GetByIdAsync(command.Id, ct)
+                ?? throw new NotFoundException($"NOTE entity with ID: [{command.Id}] was not found");
 
-            throw new NotFoundException($"Note with ID:{command.Id} was not found");
+            await _repo.DeleteAsync(note.Id, ct);
+
+            _logger.LogInformation("NOTE DELETED, participant entity ID: {0}", note.Id);
+            return Unit.Value;
         }
     }
 }

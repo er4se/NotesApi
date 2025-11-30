@@ -1,0 +1,42 @@
+﻿using Serilog;
+using Serilog.Enrichers.CorrelationId;
+using System.Globalization;
+
+namespace NotesApi.Extensions
+{
+    public static class LoggingExtensions
+    {
+        public static void ConfigureSerilog(WebApplicationBuilder builder)
+        {
+            var isDevelopment = builder.Environment.IsDevelopment();
+
+            var loggerConfig = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .Enrich.WithCorrelationId()
+                .MinimumLevel.Information();
+
+            if (isDevelopment)
+            {
+                loggerConfig
+                    .MinimumLevel.Debug()
+                    .WriteTo.Console(outputTemplate:
+                        "[{Timestamp:HH:mm:ss} {Level:u3}] ({CorrelationId}) {Message:lj}{NewLine}{Exception}");
+            }
+            else
+            {
+                loggerConfig
+                    .WriteTo.Console(outputTemplate:
+                        "[{Timestamp:yyyy-MM-dd HH:mm:ss}] [{Level}] {Message}{NewLine}{Exception}");
+            }
+
+            loggerConfig.WriteTo.File("logs/api-.log",
+                rollingInterval: RollingInterval.Day,
+                shared: true,
+                formatProvider: CultureInfo.InvariantCulture,
+                fileSizeLimitBytes: 100_000_000,
+                retainedFileCountLimit: isDevelopment ? 7 : 30);
+
+            Log.Logger = loggerConfig.CreateLogger();
+        }
+    }
+}

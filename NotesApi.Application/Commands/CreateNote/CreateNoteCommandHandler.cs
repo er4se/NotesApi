@@ -1,11 +1,13 @@
-﻿using MediatR;
+﻿using Mapster;
+using MediatR;
 using Microsoft.Extensions.Logging;
+using NotesApi.Application.DTO;
 using NotesApi.Application.Repository;
 using NotesApi.Domain.Models;
 
 namespace NotesApi.Application.Commands.CreateNote
 {
-    public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, int>
+    public class CreateNoteCommandHandler : IRequestHandler<CreateNoteCommand, NoteDto>
     {
         private readonly ILogger<CreateNoteCommandHandler> _logger;
         private readonly INoteRepository _repo;
@@ -18,14 +20,14 @@ namespace NotesApi.Application.Commands.CreateNote
             _repo = repo;
         }
 
-        public async Task<int> Handle(CreateNoteCommand command, CancellationToken ct = default)
+        public async Task<NoteDto> Handle(CreateNoteCommand command, CancellationToken ct)
         {
-            var entity = new Note { Title = command.Title, Content = command.Content, CreatedAt = DateTime.UtcNow };
-            await _repo.CreateAsync(entity, ct);
+            var note = Note.Create(command.Title, command.Content);
+            await _repo.CreateAsync(note, ct);
 
-            _logger.LogInformation($"Created note {entity.Id}");
+            _logger.LogInformation("NOTE CREATED, participant entity ID: {0}", note.Id);
 
-            return entity.Id;
+            return note.Adapt<NoteDto>();
         }
     }
 }

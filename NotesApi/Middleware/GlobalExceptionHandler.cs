@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using NotesApi.Application.Common.Exceptions;
+using NotesApi.Domain.Common.Exceptions;
 
 namespace NotesApi.Middleware
 {

@@ -2,25 +2,30 @@
 using MediatR;
 using NotesApi.Application.DTO;
 using NotesApi.Application.Repository;
-using NotesApi.Application.Common.Exceptions;
+using NotesApi.Domain.Common.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace NotesApi.Application.Queries.GetNoteById
 {
-    public class GetNoteByIdQueryHandler : IRequestHandler<GetNoteByIdQuery, NoteDto?>
+    public class GetNoteByIdQueryHandler : IRequestHandler<GetNoteByIdQuery, NoteDto>
     {
+        private readonly ILogger<GetNoteByIdQueryHandler> _logger;
         private readonly INoteRepository _repo;
-        public GetNoteByIdQueryHandler(INoteRepository repo)
+        public GetNoteByIdQueryHandler(
+            ILogger<GetNoteByIdQueryHandler> logger,
+            INoteRepository repo)
         {
             _repo = repo;
+            _logger = logger;
         }
 
-        public async Task<NoteDto?> Handle(GetNoteByIdQuery command, CancellationToken ct = default)
+        public async Task<NoteDto> Handle(GetNoteByIdQuery command, CancellationToken ct = default)
         {
-            var result = await _repo.GetByIdAsync(command.Id, ct);
-            if (result == null)
-                throw new NotFoundException($"Note with ID:{command.Id} was not found");
+            var note = await _repo.GetByIdAsync(command.Id, ct)
+                ?? throw new NotFoundException($"NOTE entity with ID: [{command.Id}] was not found");
 
-            return result.Adapt<NoteDto>();
+            _logger.LogInformation("NOTE EXTRACTED, participant entity ID: {0}", note.Id);
+            return note.Adapt<NoteDto>();
         }
     }
 }

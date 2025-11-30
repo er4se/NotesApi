@@ -12,7 +12,7 @@ namespace NotesApi.Application.Queries.GetNoteById
         public GetNoteByIdQueryValidator()
         {
             RuleFor(x => x.Id)
-                .GreaterThanOrEqualTo(0).WithMessage("Id cannot be a negative number");
+                .NotEmpty().WithMessage("ID is required");
         }
     }
 }
