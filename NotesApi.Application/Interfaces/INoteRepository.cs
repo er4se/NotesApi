@@ -1,6 +1,6 @@
 ﻿using NotesApi.Domain.Models;
 
-namespace NotesApi.Application.Repository
+namespace NotesApi.Application.Interfaces
 {
     public interface INoteRepository
     {

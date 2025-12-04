@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NotesApi.Application.Repository;
+using NotesApi.Application.Interfaces;
 using NotesApi.Domain.Models;
 using NotesApi.Domain.Common.Exceptions;
 using NotesApi.Infrastructure.Data;

@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NotesApi.Application.DTO;
-using NotesApi.Application.Repository;
+using NotesApi.Application.Interfaces;
 using NotesApi.Domain.Models;
 
 namespace NotesApi.Application.Commands.CreateNote
@@ -22,7 +22,7 @@ namespace NotesApi.Application.Commands.CreateNote
 
         public async Task<NoteDto> Handle(CreateNoteCommand command, CancellationToken ct)
         {
-            var note = Note.Create(command.Title, command.Content);
+            var note = Note.Create(command.Title, command.Content, Guid.NewGuid());
             await _repo.CreateAsync(note, ct);
 
             _logger.LogInformation("NOTE CREATED, participant entity ID: {0}", note.Id);

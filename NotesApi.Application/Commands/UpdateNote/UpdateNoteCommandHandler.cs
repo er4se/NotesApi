@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using NotesApi.Domain.Common.Exceptions;
-using NotesApi.Application.Repository;
+using NotesApi.Application.Interfaces;
 using NotesApi.Domain.Models;
 
 namespace NotesApi.Application.Commands.UpdateNote

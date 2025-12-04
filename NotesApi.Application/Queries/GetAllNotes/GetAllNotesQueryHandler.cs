@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NotesApi.Application.DTO;
-using NotesApi.Application.Repository;
+using NotesApi.Application.Interfaces;
 
 namespace NotesApi.Application.Queries.GetAllNotes
 {

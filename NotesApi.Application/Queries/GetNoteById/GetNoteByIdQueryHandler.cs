@@ -1,7 +1,7 @@
 ﻿using Mapster;
 using MediatR;
 using NotesApi.Application.DTO;
-using NotesApi.Application.Repository;
+using NotesApi.Application.Interfaces;
 using NotesApi.Domain.Common.Exceptions;
 using Microsoft.Extensions.Logging;
 

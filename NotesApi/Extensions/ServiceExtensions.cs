@@ -1,6 +1,6 @@
 ﻿using Mapster;
 using NotesApi.Application.Common;
-using NotesApi.Application.Repository;
+using NotesApi.Application.Interfaces;
 using NotesApi.Infrastructure.Repository;
 using NotesApi.Middleware;
 

@@ -6,9 +6,11 @@ using NotesApi.Application.Commands.DeleteNote;
 using NotesApi.Application.Commands.UpdateNote;
 using NotesApi.Application.Queries.GetAllNotes;
 using NotesApi.Application.Queries.GetNoteById;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NotesApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class NotesController : ControllerBase
