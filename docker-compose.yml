@@ -26,12 +26,18 @@ services:
     container_name: notes_api
     depends_on:
       postgres:
-        condition: service_healthy  # Ждём пока PostgreSQL станет healthy
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=notesdb;Username=postgres;Password=postgres"
     ports:
       - "5000:8080"
+
+  redis:
+    image: redis:8
+    container_name: notes_redis
+    ports:
+      - "6379:6379"
 
 volumes:
   pgdata:

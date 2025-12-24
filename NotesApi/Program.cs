@@ -35,6 +35,10 @@ namespace NotesApi
                 LoggingExtensions.ConfigureSerilog(builder);
                 builder.Host.UseSerilog();
                 builder.Services.AddDatabase(builder.Configuration);
+                builder.Services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+                });
 
                 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
                 {
@@ -78,6 +82,7 @@ namespace NotesApi
                 builder.Services.AddScoped<IIdentityService, IdentityService>();
                 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
                 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+                builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
                 builder.Services.AddSwaggerGen(c =>
                 {
