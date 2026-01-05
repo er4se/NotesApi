@@ -13,6 +13,16 @@ namespace NotesApi.Extensions
             app.UseSerilogRequestLogging(options =>
             {
                 options.MessageTemplate = "Handled {RequestPath} {RequestMethod} responded {StatusCode} in {Elapsed:0.0000}ms (CorrelationId: {CorrelationId})";
+
+                options.GetLevel = (httpContext, elapsed, ex) =>
+                {
+                    if (httpContext.Request.Path.StartsWithSegments("/health"))
+                        return Serilog.Events.LogEventLevel.Verbose;
+
+                    return ex != null
+                        ? Serilog.Events.LogEventLevel.Error
+                        : Serilog.Events.LogEventLevel.Information;
+                };
             });
 
             app.UseRouting();

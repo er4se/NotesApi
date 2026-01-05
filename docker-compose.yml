@@ -22,22 +22,37 @@ services:
     image: notesapi_image
     build:
       context: .
-      dockerfile: NotesApi/Dockerfile
+      dockerfile: NotesApi.Web/Dockerfile
     container_name: notes_api
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=notesdb;Username=postgres;Password=postgres"
+      ConnectionStrings__Redis: "redis:6379"
     ports:
       - "5000:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   redis:
     image: redis:8
     container_name: notes_redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
 volumes:
   pgdata:
