@@ -1,6 +1,14 @@
-| [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) |
-
 # NotesApi (учебный проект)
+
+[![Английский](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
+[![Русский](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
+
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+![Redis](https://img.shields.io/badge/Redis-8.0-DC382D?logo=redis)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
+![License](https://img.shields.io/badge/License-Unlicense-blue.svg)
+
 > REST API с чистой архитектурой и функциями production-уровня: валидация данных, обработка ошибок, JWT-аутентификация, распределенный кэш, health-checks
 
 ## 🚀 Быстрый запуск
