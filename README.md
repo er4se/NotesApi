@@ -1,3 +1,5 @@
+| [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) |
+
 # NotesApi (education project)
 > Clean Architecture REST API with production-grade features: validation, error handling, JWT auth, distributed cache, health checks
 
