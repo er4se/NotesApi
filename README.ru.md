@@ -1,0 +1,232 @@
+| [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) |
+
+# NotesApi (учебный проект)
+> REST API с чистой архитектурой и функциями production-уровня: валидация данных, обработка ошибок, JWT-аутентификация, распределенный кэш, health-checks
+
+## 🚀 Быстрый запуск
+
+```bash
+# Клонирование и запуск
+git clone https://github.com/er4se/NotesApi
+cd NotesApi
+docker-compose up -d
+
+# Проверка health
+curl http://localhost:5000/health
+
+# Открыть Swagger
+open http://localhost:5000/swagger
+```
+
+**Первый вызов API:**
+```bash
+# Регистрация
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com", "password":"Test1234~"}'
+
+# Авторизация
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com", "password":"Test1234~"}'
+```
+
+## 📖 О чем проект
+
+NotesApi - учебный backend-сервис на ASP.NET Core, демонстрирующий production-подходы к построению web-API: валидация, централизованная обработка ошибок, аутентификация через JWT, распределённый кеш, health checks и контейнеризация
+
+## ✨ Реализованные возможности
+
+- Валидация входящих данных через **FluentValidation**;
+- Глобальная обработка ошибок с **Problem Details (RFC 7807)**;
+- Структурированное логирование через **Serilog + CorrelationId**;
+- Аутентификация и авторизация через **JWT Bearer**;
+- Distributed cache через **Redis**;
+- **Health-checks** для API, Postgres, Redis;
+- Запуск через **Docker Compose**
+
+## 🏗️ Архитектура
+
+### Архитектура:
+
+```mermaid
+graph TB
+  Client[Client<br/>Swagger/Postman]
+  API[ASP.NET Core Web API<br/>:8080]
+  PG[(PostgresSQL<br/>:5432)]
+  RD[(Redis Cache<br/>:6379)]
+
+  Client -->|HTTP/JWT| API
+  API -->|EF Core| PG
+  API -->|StackExchange.Redis| RD
+
+  subgraph Docker Compose
+    API
+    PG
+    RD
+  end
+
+  style API fill:#512BD4
+  style PG fill:#336791
+  style RD fill:#DC382D
+```
+
+### Слои приложения:
+
+```mermaid
+graph LR
+  subgraph "Clean Architecture"
+    Web[Web Layer<br/>Controllers, Middleware]
+    App[Application Layer<br/>CQRS, Validation]
+    Infra[Infrastructure Layer<br/>EF Core, Identity, Redis]
+    Domain[Domain Layer<br/>Entities, Exceptions]
+  end
+
+  Web --> App
+  App --> Domain
+  Infra --> App
+  Infra --> Domain
+
+  style Domain fill:#28a745
+  style App fill:#007bff
+  style Infra fill:#ffc107,color:#000
+  style Web fill:#dc3545
+```
+
+## 📡 API Endpoints
+
+| Метод | Эндпоинты | Аутентификация | Описание |
+|-------|-----------|----------------|----------|
+| POST | `/api/auth/register` | ❌ | Регистрация нового пользователя |
+| POST | `/api/auth/login` | ❌ | Авторизация и получение JWT |
+| GET | `/api/notes` | ✅ | Получение всех заметок (кэшировано) |
+| GET | `/api/notes/{id}` | ✅ | Получение заметки по ID (кэшировано) |
+| POST | `/api/notes` | ✅ | Создание новой заметки |
+| PUT | `/api/notes/{id}` | ✅ | Обновление заметки |
+| DELETE | `/api/notes/{id}` | ✅ | Удаление заметки |
+| GET | `/health` | ❌ | Health check эндпоинт |
+
+**Аутентификация:** Bearer JWT token в заголовке `Authorization`
+
+## ⚡ Производительность
+
+**Влияние кэширования через Redis** (20 запросов):
+
+| Сценарий | Среднее время | Улучшение |
+|----------|---------------|-----------|
+| Без кэширования | 22ms | базовый |
+| С кэшированием (hit) | 4ms | **5.5x быстрее** ⚡ |
+
+TTL кэша: 60 секунд  
+Протестировано в: Docker Compose, локальная среда
+
+## 🔧 Конфигурация
+
+### Development (appsettings.json)
+```json
+{
+  "Jwt": {
+    "Key": "your-secret-key-here",
+    "Issuer": "NotesApi",
+    "Audience": "NotesApiClient"
+  }
+}
+```
+
+### Production (переменные окружения)
+```bash
+# Docker Compose
+environment:
+  - Jwt__Key=${JWT_SECRET_KEY}
+  - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+  - ConnectionStrings__Redis=${REDIS_CONNECTION}
+```
+
+### Использование .NET User Secrets (рекомендовано для локальной разработки)
+```bash
+dotnet user-secrets init --project NotesApi.Web
+dotnet user-secrets set "Jwt:Key" "your-secret-key"
+```
+
+⚠️ **Никогда не публикуйте рабочую секретную информацию в Git!**
+
+## 🧪 Тестирование
+
+### 1. Регистрация и авторизация
+```bash
+# Регистрация
+REGISTER_RESPONSE=$(curl -s -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"Test1234"}')
+
+# Авторизация
+TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"Test1234"}' | jq -r '.token')
+
+echo "Token: $TOKEN"
+```
+
+### 2. Создание заметки (с помощью JWT)
+```bash
+curl -X POST http://localhost:5000/api/notes \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"My Note","content":"Note content"}'
+```
+
+### 3. Проверка кэша (проверка логов)
+```bash
+# Первый запрос (cache miss)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/notes
+
+# Второй запрос (cache hit - должен быть быстрее)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/notes
+
+# Проверка логов
+docker logs notes_api | grep "Cache hit"
+```
+
+### 4. Health Check
+```bash
+curl http://localhost:5000/health | jq
+
+# Остановить Redis и проверить снова
+docker stop notes_redis
+curl http://localhost:5000/health | jq  # Redis должен быть указан как unhealthy
+```
+
+## 🗺️ Roadmap
+
+### ✅ Фаза 1: Production-Ready Монолит (Завершено)
+- Clean Architecture
+- JWT аутентификация
+- Redis кэширование
+- Health Checks
+- Docker Compose
+
+### 🚧 Фаза 2: Event-Driven Архитектура (В процессе)
+- [ ] RabbitMQ интеграция
+- [ ] Паттерны асинхронности
+- [ ] Event sourcing основы
+- [ ] CQRS улучшения
+
+### 📋 Фаза 3: Микросервисность и Наблюдаемость (Запланированно)
+- [ ] Деление на микросервисы
+- [ ] API Gateway (Ocelot/YARP)
+- [ ] gRPC коммуникация
+- [ ] OpenTelemetry отслеживание
+- [ ] Prometheus метрики
+- [ ] Unit & Интеграционные тесты
+
+### 🔮 Фаза 4: Облачные технологии и Оркестрация (Запланированно)
+- [ ] Kubernetes развертка
+- [ ] CI/CD pipeline
+- [ ] Azure/AWS инфраструктура
+
+## 📄 Лицензия
+
+Этот проект опубликован публично согласно [The Unlicense](https://unlicense.org/)
+![License](https://img.shields.io/badge/License-Unlicense-blue.svg)
+
+Мащенко Александр, 2026
