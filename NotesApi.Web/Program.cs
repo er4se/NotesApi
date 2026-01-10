@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using RabbitMQ.Client;
 
 namespace NotesApi
 {
@@ -44,7 +45,22 @@ namespace NotesApi
                     .AddDbContextCheck<AppDbContext>("notes_postgres")
                     .AddRedis(
                         builder.Configuration.GetConnectionString("Redis")!,
-                        name: "notes_redis");
+                        name: "notes_redis")
+                    .AddRabbitMQ(
+                        factory: async sp =>
+                        {
+                            var config = sp.GetRequiredService<IConfiguration>();
+                            var factory = new ConnectionFactory
+                            {
+                                HostName = config["RabbitMQ:Host"]!,
+                                Port = config.GetValue<int>("RabbitMQ:Port"),
+                                UserName = config["RabbitMQ:Username"]!,
+                                Password = config["RabbitMQ:Password"]!
+                            };
+                            return await factory.CreateConnectionAsync();
+                        },
+                        name: "rabbitmq"
+                    );
 
                 builder.Services.AddDatabase(builder.Configuration);
                 builder.Services.AddCaching(builder.Configuration);
