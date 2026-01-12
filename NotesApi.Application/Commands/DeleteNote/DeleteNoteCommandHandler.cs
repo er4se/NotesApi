@@ -1,8 +1,10 @@
-﻿using MediatR;
+﻿using MassTransit;
+using MediatR;
 using Microsoft.Extensions.Logging;
-using NotesApi.Domain.Common.Exceptions;
-using NotesApi.Application.Interfaces;
 using NotesApi.Application.Common;
+using NotesApi.Application.Interfaces;
+using NotesApi.Contracts.Events.V1;
+using NotesApi.Domain.Common.Exceptions;
 
 namespace NotesApi.Application.Commands.DeleteNote
 {
@@ -11,16 +13,19 @@ namespace NotesApi.Application.Commands.DeleteNote
         private readonly ILogger<DeleteNoteCommandHandler> _logger;
         private readonly INoteRepository _repo;
         private readonly ICacheService _cache;
+        private readonly IPublishEndpoint _publishEndpoint;
 
         public DeleteNoteCommandHandler(
             ILogger<DeleteNoteCommandHandler> logger,
             INoteRepository repo,
-            ICacheService cache
+            ICacheService cache,
+            IPublishEndpoint publishEndpoint
             )
         {
             _repo = repo;
             _logger = logger;
             _cache = cache;
+            _publishEndpoint = publishEndpoint;
         }
 
         public async Task<Unit> Handle(DeleteNoteCommand command, CancellationToken ct = default)
@@ -36,6 +41,17 @@ namespace NotesApi.Application.Commands.DeleteNote
 
             _logger.LogInformation("Cache invalidated for {CacheKey} and {CacheKeyById}",
                 CacheKeys.Notes.All, cacheKeyById);
+
+            await _publishEndpoint.Publish(new NoteDeleted
+            {
+                NoteId = note.Id,
+                DeletedAt = DateTime.UtcNow
+            });
+
+            _logger.LogInformation(
+                "Published event {EventType} for note {NoteId}",
+                nameof(NoteDeleted),
+                note.Id);
 
             _logger.LogInformation("NOTE DELETED, participant entity ID: {0}", note.Id);
             return Unit.Value;
