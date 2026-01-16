@@ -2,6 +2,7 @@
 using NotesApi.Application.Common;
 using NotesApi.Application.Interfaces;
 using NotesApi.Infrastructure.Repository;
+using NotesApi.Infrastructure.Services;
 using NotesApi.Middleware;
 
 namespace NotesApi.Extensions
@@ -29,6 +30,9 @@ namespace NotesApi.Extensions
             services.AddApplication();
             MappingConfig.RegisterMappings();
             services.AddScoped<INoteRepository, NoteRepository>();
+
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICorrelationContext, CorrelationContext>();
         }
     }
 }

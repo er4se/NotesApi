@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using RabbitMQ.Client;
 using MassTransit;
+using NotesApi.Infrastructure.Consumers;
 
 namespace NotesApi
 {
@@ -77,6 +78,10 @@ namespace NotesApi
                     var rabbitUsername = builder.Configuration["RabbitMQ:Username"] ?? "guest";
                     var rabbitPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
 
+                    x.AddConsumer<NoteCreatedConsumer>();
+                    x.AddConsumer<NoteUpdatedConsumer>();
+                    x.AddConsumer<NoteDeletedConsumer>();
+
                     x.UsingRabbitMq((context, cfg) =>
                     {
                         cfg.Host(rabbitHost, "/", h =>
@@ -84,6 +89,12 @@ namespace NotesApi
                             h.Username(rabbitUsername);
                             h.Password(rabbitPassword);
                         });
+
+                        cfg.UseMessageRetry(r => r.Incremental(
+                            retryLimit: 3,
+                            initialInterval: TimeSpan.FromSeconds(1),
+                            intervalIncrement: TimeSpan.FromSeconds(2)
+                        ));
 
                         cfg.ConfigureEndpoints(context);
                     });
