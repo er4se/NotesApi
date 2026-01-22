@@ -26,6 +26,7 @@ using HealthChecks.UI.Client;
 using RabbitMQ.Client;
 using MassTransit;
 using NotesApi.Infrastructure.Consumers;
+using NotesApi.Infrastructure.Consumers.Filters;
 
 namespace NotesApi
 {
@@ -84,6 +85,10 @@ namespace NotesApi
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
+                        cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
+                        cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
+                        cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
+
                         cfg.Host(rabbitHost, "/", h =>
                         {
                             h.Username(rabbitUsername);
@@ -108,6 +113,8 @@ namespace NotesApi
                 {
                     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                 });
+
+                app.UseMiddleware<CorrelationMiddleware>();
 
                 app.ApplyMigrations();
                 app.ConfigureMiddleware();

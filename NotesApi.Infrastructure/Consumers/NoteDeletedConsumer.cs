@@ -22,11 +22,9 @@ namespace NotesApi.Infrastructure.Consumers
         {
             var message = context.Message;
             var messageId = context.MessageId;
-            var correlationId = context.CorrelationId;
 
             _logger.LogInformation(
-                "Consumed NoteDeleted event. CorrelationId={CorrelationId}, MessageId={MessageId}, NoteId={NoteId}",
-                correlationId,
+                "Consumed NoteDeleted event. MessageId={MessageId}, NoteId={NoteId}",
                 messageId,
                 message.NoteId);
 

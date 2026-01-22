@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
+using NotesApi.Application.Common.Context;
 using NotesApi.Contracts.Events.V1;
 using System;
 using System.Collections.Generic;
@@ -20,15 +21,25 @@ namespace NotesApi.Infrastructure.Consumers
 
         public Task Consume(ConsumeContext<NoteCreated> context)
         {
-            var message = context.Message;
-            var messageId = context.MessageId;
-            var correlationId = context.CorrelationId;
-
             _logger.LogInformation(
-                "Consumed NoteCreated event. CorrelationId={CorrelationId}, MessageId={MessageId}, NoteId={NoteId}",
-                correlationId,
-                messageId,
-                message.NoteId);
+            "Consumed NoteCreated event. MessageId={MessageId}, NoteId={NoteId}, MT-CorrelationId={CorrelationId}",
+            context.MessageId,
+            context.Message.NoteId,
+            context.CorrelationId); // Это из MassTransit context
+
+            // Лог 2: Что в AsyncStorage
+            var correlation = AsyncStorage<Correlation>.Retrieve();
+            _logger.LogInformation(
+                "AsyncStorage CorrelationId: {AsyncStorageCorrelationId}",
+                correlation?.Id.ToString() ?? "NULL");
+
+            //var message = context.Message;
+            //var messageId = context.MessageId;
+            //
+            //_logger.LogInformation(
+            //    "Consumed NoteCreated event. MessageId={MessageId}, NoteId={NoteId}",
+            //    messageId,
+            //    message.NoteId);
 
             return Task.CompletedTask;
         }

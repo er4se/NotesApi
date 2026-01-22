@@ -4,6 +4,7 @@ using NotesApi.Application.Interfaces;
 using NotesApi.Infrastructure.Repository;
 using NotesApi.Infrastructure.Services;
 using NotesApi.Middleware;
+using NotesApi.Web.Handlers;
 
 namespace NotesApi.Extensions
 {
@@ -20,7 +21,7 @@ namespace NotesApi.Extensions
                 options.SuppressAsyncSuffixInActionNames = false;
             });
 
-            services.AddTransient<CorrelationIdentifierHandler>();
+            services.AddTransient<CorrelationHeaderHandler>();
             services.AddExceptionHandler<GlobalExceptionHandler>();
             services.AddProblemDetails();
         }
@@ -32,7 +33,6 @@ namespace NotesApi.Extensions
             services.AddScoped<INoteRepository, NoteRepository>();
 
             services.AddHttpContextAccessor();
-            services.AddScoped<ICorrelationContext, CorrelationContext>();
         }
     }
 }

@@ -16,21 +16,18 @@ namespace NotesApi.Application.Commands.CreateNote
         private readonly INoteRepository _repo;
         private readonly ICacheService _cache;
         private readonly IPublishEndpoint _publishEndpoint;
-        private readonly ICorrelationContext _correlationContext;
 
         public CreateNoteCommandHandler(
             ILogger<CreateNoteCommandHandler> logger,
             INoteRepository repo,
             ICacheService cache,
-            IPublishEndpoint publishEndpoint,
-            ICorrelationContext correlationContext
+            IPublishEndpoint publishEndpoint
             )
         {
             _logger = logger;
             _repo = repo;
             _cache = cache;
             _publishEndpoint = publishEndpoint;
-            _correlationContext = correlationContext;
         }
 
         public async Task<NoteDto> Handle(CreateNoteCommand command, CancellationToken ct)
@@ -46,11 +43,8 @@ namespace NotesApi.Application.Commands.CreateNote
                 NoteId = note.Id,
                 Title = note.Title,
                 CreatedAt = note.CreatedAt
-            },
-            context =>
-            {
-                context.CorrelationId = Guid.Parse(_correlationContext.CorrelationId);
-            });
+
+            }, ct);
 
             _logger.LogInformation(
                 "Published event {EventType} for note {NoteId}",
