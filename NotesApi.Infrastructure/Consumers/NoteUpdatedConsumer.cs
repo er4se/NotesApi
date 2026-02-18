@@ -23,10 +23,13 @@ namespace NotesApi.Infrastructure.Consumers
             var message = context.Message;
             var messageId = context.MessageId;
 
-            _logger.LogInformation(
+            using (Serilog.Context.LogContext.PushProperty("CorrelationId", message.CorrelationId))
+            {
+                _logger.LogInformation(
                 "Consumed NoteUpdated event. MessageId={MessageId}, NoteId={NoteId}",
                 messageId,
                 message.NoteId);
+            }
 
             return Task.CompletedTask;
         }

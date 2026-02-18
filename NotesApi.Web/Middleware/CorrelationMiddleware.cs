@@ -1,33 +1,36 @@
-﻿using NotesApi.Infrastructure.Services;
-using Serilog.Events;
+﻿using NotesApi.Infrastructure.Consumers;
+using NotesApi.Infrastructure.Services;
 using Serilog.Context;
-using NotesApi.Application.Common.Context;
+using Serilog.Events;
 
 namespace NotesApi.Middleware
 {
     public class CorrelationMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<CorrelationMiddleware> _logger;
 
-        public CorrelationMiddleware(RequestDelegate next)
+        public CorrelationMiddleware(RequestDelegate next, ILogger<CorrelationMiddleware> logger)
         {
+            _logger = logger;
             _next = next;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var correlationIdHeader = context.Request.Headers["CorrelationId"];
-            if (!string.IsNullOrWhiteSpace(correlationIdHeader))
-            {
-                var correlationId = Guid.Parse(correlationIdHeader.ToString());
-                Serilog.Context.LogContext.PushProperty("CorrelationId", new ScalarValue(correlationId));
-                AsyncStorage<Correlation>.Store(new Correlation
-                {
-                    Id = correlationId
-                });
-            }
+            var correlationIdHeader = context.Request.Headers["X-Correlation-ID"].FirstOrDefault();
 
-            await _next(context);
+            if (string.IsNullOrWhiteSpace(correlationIdHeader)) correlationIdHeader = null;
+            var correlationId = correlationIdHeader ?? Guid.NewGuid().ToString();
+
+            context.Response.Headers["X-Correlation-ID"] = correlationId;
+            context.Items["CorrelationId"] = correlationId;
+            context.TraceIdentifier = correlationId;
+
+            using (Serilog.Context.LogContext.PushProperty("CorrelationId", Guid.Parse(correlationId)))
+            {
+                await _next(context);
+            }
         }
     }
 }

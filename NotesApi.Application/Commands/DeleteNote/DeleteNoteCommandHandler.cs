@@ -14,18 +14,21 @@ namespace NotesApi.Application.Commands.DeleteNote
         private readonly INoteRepository _repo;
         private readonly ICacheService _cache;
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ICorrelationContext _correlationContext;
 
         public DeleteNoteCommandHandler(
             ILogger<DeleteNoteCommandHandler> logger,
             INoteRepository repo,
             ICacheService cache,
-            IPublishEndpoint publishEndpoint
+            IPublishEndpoint publishEndpoint,
+            ICorrelationContext correlationContext
             )
         {
             _repo = repo;
             _logger = logger;
             _cache = cache;
             _publishEndpoint = publishEndpoint;
+            _correlationContext = correlationContext;
         }
 
         public async Task<Unit> Handle(DeleteNoteCommand command, CancellationToken ct = default)
@@ -45,7 +48,9 @@ namespace NotesApi.Application.Commands.DeleteNote
             await _publishEndpoint.Publish(new NoteDeleted
             {
                 NoteId = note.Id,
-                DeletedAt = DateTime.UtcNow
+                DeletedAt = DateTime.UtcNow,
+
+                CorrelationId = _correlationContext.CorrelationId
 
             }, ct);
 

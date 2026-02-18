@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NotesApi.Application.Common.Context
+namespace NotesApi.Application.Interfaces
 {
-    public class Correlation
+    public interface ICorrelationContext
     {
-        public Guid Id { get; init; }
+        Guid CorrelationId { get; }
     }
 }
