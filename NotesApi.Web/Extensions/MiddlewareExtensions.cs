@@ -7,7 +7,7 @@ namespace NotesApi.Extensions
     {
         public static void ConfigureMiddleware(this WebApplication app)
         {
-            app.UseMiddleware<CorrelationIdentifierHandler>();
+            app.UseMiddleware<CorrelationMiddleware>();
             app.UseExceptionHandler();
 
             app.UseSerilogRequestLogging(options =>

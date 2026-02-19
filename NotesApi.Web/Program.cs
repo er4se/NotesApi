@@ -24,6 +24,8 @@ using System.Text;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using RabbitMQ.Client;
+using MassTransit;
+using NotesApi.Infrastructure.Consumers;
 
 namespace NotesApi
 {
@@ -70,6 +72,36 @@ namespace NotesApi
                 builder.Services.AddApiServices();
                 builder.Services.AddApplicationLayer();
 
+                builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
+
+                builder.Services.AddMassTransit(x =>
+                {
+                    var rabbitHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+                    var rabbitUsername = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+                    var rabbitPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+                    x.AddConsumer<NoteCreatedConsumer>();
+                    x.AddConsumer<NoteUpdatedConsumer>();
+                    x.AddConsumer<NoteDeletedConsumer>();
+
+                    x.UsingRabbitMq((context, cfg) =>
+                    {
+                        cfg.Host(rabbitHost, "/", h =>
+                        {
+                            h.Username(rabbitUsername);
+                            h.Password(rabbitPassword);
+                        });
+
+                        cfg.UseMessageRetry(r => r.Incremental(
+                            retryLimit: 3,
+                            initialInterval: TimeSpan.FromSeconds(1),
+                            intervalIncrement: TimeSpan.FromSeconds(2)
+                        ));
+
+                        cfg.ConfigureEndpoints(context);
+                    });
+                });
+
                 builder.Services.AddSwaggerDocumentation();
 
                 var app = builder.Build();
@@ -78,6 +110,8 @@ namespace NotesApi
                 {
                     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                 });
+
+                app.UseMiddleware<CorrelationMiddleware>();
 
                 app.ApplyMigrations();
                 app.ConfigureMiddleware();
