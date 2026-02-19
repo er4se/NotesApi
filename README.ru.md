@@ -50,6 +50,7 @@ NotesApi - учебный backend-сервис на ASP.NET Core, демонст
 - Структурированное логирование через **Serilog + CorrelationId**;
 - Аутентификация и авторизация через **JWT Bearer**;
 - Distributed cache через **Redis**;
+- **Event-driven** интегрирована через **RabbitMQ + MassTransit**;
 - **Health-checks** для API, Postgres, Redis;
 - Запуск через **Docker Compose**
 
@@ -63,20 +64,24 @@ graph TB
   API[ASP.NET Core Web API<br/>:8080]
   PG[(PostgresSQL<br/>:5432)]
   RD[(Redis Cache<br/>:6379)]
+  RMQ[(RabbitMQ<br/>:5672/15672)]
 
   Client -->|HTTP/JWT| API
   API -->|EF Core| PG
   API -->|StackExchange.Redis| RD
+  API -->|MassTransit| RMQ
 
   subgraph Docker Compose
     API
     PG
     RD
+    RMQ
   end
 
   style API fill:#512BD4
   style PG fill:#336791
   style RD fill:#DC382D
+  style RMQ fill:#FF6600
 ```
 
 ### Слои приложения:
@@ -115,6 +120,53 @@ graph LR
 | GET | `/health` | ❌ | Health check эндпоинт |
 
 **Аутентификация:** Bearer JWT token в заголовке `Authorization`
+
+## 📡 Event-Driven Messaging (Фаза 2)
+
+NotesApi публикует бизнес-события в RabbitMQ при изменении заметок и обрабатывает их асинхронно через MassTransit
+
+### Поток событий
+
+Создание заметки:
+
+1. Клиент отправляет `POST /api/notes` (опционально с заголовком `X-Correlation-ID`).
+2. API:
+   - валидирует запрос;
+   - сохраняет заметку в PostgreSQL;
+   - публикует событие `NoteCreated` в RabbitMQ через MassTransit.
+3. Фоновый consumer `NoteCreatedConsumer` получает событие из очереди и логирует факт обработки.
+4. Все шаги трассируются по одному `CorrelationId`.
+
+### Инфраструктура
+
+- **RabbitMQ**:
+  - поднимается в `docker-compose` как сервис `rabbitmq`;
+  - UI: `http://localhost:15672` (login: `guest`, password: `guest`);
+  - используется virtual host `/`.
+
+- **MassTransit**:
+  - интегрирован в `NotesApi.Web`;
+  - использует RabbitMQ как transport;
+  - автоматически создаёт exchanges/queues для consumers через `ConfigureEndpoints`.
+
+### События
+
+Контракты событий находятся в проекте `NotesApi.Contracts` (namespace `NotesApi.Contracts.Events.V1`).
+
+| Event         | Trigger                        | Important fields                                      |
+|---------------|--------------------------------|-------------------------------------------------------|
+| `NoteCreated` | After successful note creation | `CorrelationId`, `NoteId`, `Title`, `CreatedAt`, `UserId` |
+| `NoteUpdated` | After successful note update   | `CorrelationId`, `NoteId`, `Title`, `UpdatedAt`, `UserId` |
+| `NoteDeleted` | After successful note delete   | `CorrelationId`, `NoteId`, `DeletedAt`, `UserId`      |
+
+## 🧭 Наблюдаемость
+
+Для каждой операции используется `CorrelationId`, который:
+
+- приходит от клиента в `X-Correlation-ID` либо генерируется middleware;
+- пишется в `Serilog` через `LogContext.PushProperty("CorrelationId", ...)`;
+- сохраняется в событии (`NoteCreated.CorrelationId`);
+- логируется в consumer’е.
 
 ## ⚡ Производительность
 
